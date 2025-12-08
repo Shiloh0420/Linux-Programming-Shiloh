@@ -5,8 +5,15 @@
 #include<sys/types.h>
 #include<ctype.h>
 #include<stdbool.h>
+#include<unistd.h>
 
 #define MAX_FILES 114514
+
+#define COLOR_RESET   "\033[0m"
+#define COLOR_GREEN   "\033[32m"
+#define COLOR_BGREEN  "\033[1;32m"  // 亮绿色（加粗）
+#define COLOR_RED     "\033[31m"
+#define COLOR_BLUE    "\033[34m"
 
 
 int compare_string(const void *a,const void *b);    //sort
@@ -21,36 +28,49 @@ char** get_input_string_segment(char*);
 // void change_i(filesname);
 // void change_s(filesname);
 // void change_l(filesname);
-// void change_a(filesname);
+// void change_a(char**,int);
 // void change_R(filesname);
 
 int main(){
    
-    DIR* dir;
-    struct dirent *entry;
+    // DIR* dir;
+    // struct dirent *entry;
 
-    char **filesname = (char**)malloc(MAX_FILES * sizeof(char*));
-    L_NULL_DETCET(filesname);
+    // char **filesname = (char**)malloc(MAX_FILES * sizeof(char*));
+    // L_NULL_DETCET(filesname);
 
-    dir = opendir("/");
-    L_NULL_DETCET(dir);
+    // dir = opendir("/");
+    // L_NULL_DETCET(dir);
 
-    int number_files=0;
-    for(;(entry = readdir(dir)) != NULL;){
-        if(entry->d_name[0] != '.'){
-            int len = strlen(entry->d_name)+1;
-            filesname[number_files] = (char*)malloc(len * sizeof(char));
-            L_NULL_DETCET(filesname[number_files]);
-            if(filesname[number_files] != NULL){
-                memmove(filesname[number_files],entry->d_name,len);
-                number_files++;
-            }
-        }
-    }
+    // int number_files=0;
+    // for(;(entry = readdir(dir)) != NULL;){
+    //     int len = strlen(entry->d_name)+1;
+    //     filesname[number_files] = (char*)malloc(len * sizeof(char));
+    //     L_NULL_DETCET(filesname[number_files]);
+    //     if(filesname[number_files] != NULL){
+    //     memmove(filesname[number_files],entry->d_name,len);
+    //     number_files++;
+    //     }
+    // }
 
-    qsort(filesname,number_files,sizeof(char *),compare_string);
+    // qsort(filesname,number_files,sizeof(char *),compare_string);
 
+    while(1){
     char input[114514];
+
+    // char exe_path[114514];
+    // ssize_t count = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+    
+    // exe_path[count] = '\0';
+
+
+    // printf("%s ",exe_path);
+    // printf("\033[1;34m~\033[1;34m");
+    // printf("\033[34m/学习这一块/\033[34m");
+    // printf("\033[1;34mc语言这一块\033[1;34m ");
+    // printf("\033[1;32m> ");
+    printf("\033[34m上善若水，水善利万物而不争 ——《道德经》 \033[1;32m❯\033[0m ");
+
     if(fgets(input,114514,stdin)==NULL){
         
         size_t len=strlen(input);
@@ -65,7 +85,7 @@ int main(){
             break;
         }
     }
-    printf("kewu:%s\n",input);
+    //printf("kewu:%s\n",input);
     /////////////////////////////////////////////////////////////right//////////////////////////////////////////////////////
 
 
@@ -158,25 +178,25 @@ int main(){
 ///////////////////////////////////////////////////////////获得输入的每个字符串/////////////////////////////////////////////////////////
 
     int string_number = get_input_string_number(input);
-    printf("number:%d\n",string_number);
+    // printf("number:%d\n",string_number);
 
     char** need=get_input_string_segment(input);
-    printf("wtf\n");
-    for(int i=0;i<string_number;i++){
-        printf("need[%d]:%s\n",i,need[i]);
-    }
+    //printf("wtf\n");
+    // for(int i=0;i<string_number;i++){
+    //     printf("need[%d]:%s\n",i,need[i]);
+    // }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////ok//////////////////////////
 
 /////////////////////////////////////////////////////////////检测参数//////////////////////////////////////////////////////////////////
     //return 0;
 
-
-    if(strcmp(need[0],"ls")){
+    if(string_number==0) break;
+    if(strcmp(need[0],"ls")==0){
 
         have_ls=1;
 
-    }else if(strcmp(need[0],"l")){
+    }else if(strcmp(need[0],"l")==0){
 
         have_ls=1;
         have_l=1;
@@ -186,37 +206,41 @@ int main(){
         if(need[0][0]!='l'){
 
             printf("zsh: command not found: %s\n",need[0]);
-            return 0;
+            
 
         }
 
     }
 
+    if(!have_ls) continue;
+
     int noooooooooooooootfound=0;
+
 
     for(int i=1;i<string_number;i++){
 
-        if(need[i][0]!='-'){
+        // if(need[i][0]!='-'){
 
-            ///////////////////////////////////////////////////////////////////     here     ////////////////////////////////////////////////////////////////
-            for(int j=0;j<number_files;j++){
+        //     ///////////////////////////////////////////////////////////////////     here     ////////////////////////////////////////////////////////////////
+        //     for(int j=0;j<number_files;j++){
 
-                if(strcmp(need[i],filesname[j])==0){
-                    break;
-                }
+        //         if(strcmp(need[i],filesname[j])==0){
+        //             break;
+        //         }
 
-                if(j==number_files-1){
+        //         if(j==number_files-1){
 
-                    printf("ls: cannot access '%s': No such file or directory\n",need[i]);
-                    noooooooooooooootfound=1;
+        //             printf("ls: cannot access '%s': No such file or directory\n",need[i]);
+        //             noooooooooooooootfound=1;
 
-                }
+        //         }
 
-            }
+        //     }
             
 
 
-        }else{
+        // }else
+        if(need[i][0]=='-'){
             
             for(int j=1;need[i][j]!='\0';j++){
 
@@ -229,14 +253,14 @@ int main(){
                 else if(need[i][j]=='t') have_t=1;
                 else{
 
-                    printf("error: unexpected argument '%s' found\n",need[i]);
+                    printf("\033[31merror\033[0m: unexpected argument '\033[33m%s\033[0m' found\n",need[i]);
                     printf("\n");
-                    printf("\ttip: open counter-strike2 can improve your coding ability.\n");
+                    printf("  \033[32mtip\033[0m: open counter-strike2 can improve your coding ability.\n");
                     printf("\n");
                     printf("Usage: ls [OPTION]... [FILE]...\n");
                     printf("\n");
                     printf("For more information, try '--help'.\n");
-                    return 0;
+                    break;
                     //这个地方因为任务没有作要求，因此就简单处理了
                 }
 
@@ -247,25 +271,84 @@ int main(){
     }
     
     //测试是否正确获得参数
-    printf("have_ls:%d\n",have_ls);
-    printf("have_a:%d\n",have_a);
-    printf("have_l:%d\n",have_l);
-    printf("have_r:%d\n",have_r);
-    printf("have_t:%d\n",have_t);
-    printf("have_R:%d\n",have_R);
-    printf("have_i:%d\n",have_i);
-    printf("have_s:%d\n",have_s);
+    // printf("have_ls:%d\n",have_ls);
+    // printf("have_a:%d\n",have_a);
+    // printf("have_l:%d\n",have_l);
+    // printf("have_r:%d\n",have_r);
+    // printf("have_t:%d\n",have_t);
+    // printf("have_R:%d\n",have_R);
+    // printf("have_i:%d\n",have_i);
+    // printf("have_s:%d\n",have_s);
 ///////////////////////////////////////////////////////////////////error/////////////////////////////////////////////////
-    printf("nooooo:%d\n",noooooooooooooootfound);
+    // printf("noooootfound:%d\n",noooooooooooooootfound);
     if(noooooooooooooootfound) return 0;
+
+    int it_have_file_name=0;
+
+    if(!it_have_file_name){
+
+        //使用当前目录
+        DIR* dir;
+        struct dirent *entry;
+
+        char **filesname = (char**)malloc(MAX_FILES * sizeof(char*));
+        L_NULL_DETCET(filesname);
+
+        dir = opendir("/");
+        L_NULL_DETCET(dir);
+
+        int number_files=0;
+        for(;(entry = readdir(dir)) != NULL;){
+            int len = strlen(entry->d_name)+1;
+            filesname[number_files] = (char*)malloc(len * sizeof(char));
+            L_NULL_DETCET(filesname[number_files]);
+            if(filesname[number_files] != NULL){
+            memmove(filesname[number_files],entry->d_name,len);
+            number_files++;
+            }
+        }
+
+        qsort(filesname,number_files,sizeof(char *),compare_string);
+
+    }
+
+    if(have_l){}
+
+    
+////////////////////////////////////////////////////////////////////////检测文件是否存在//////////////////////////////////////////////////////////
+
+
+    // for(int i=1;i<string_number;i++){
+
+    //     if(need[i][0]!='-'){
+
+    //         /////////////////////////////////////////////////////////////////     here     ////////////////////////////////////////////////////////////////
+    //         for(int j=0;j<number_files;j++){
+
+    //             if(strcmp(need[i],filesname[j])==0){
+    //                 break;
+    //             }
+
+    //             if(j==number_files-1){
+
+    //                 printf("ls: cannot access '%s': No such file or directory\n",need[i]);
+    //                 noooooooooooooootfound=1;
+
+    //             }
+
+    //         }
+            
+
+
+    //     }
 
 ////////////////////////////////////////////////////////////////////////使用各参数//////////////////////////////////////////////////////////
 
 
 ///////////////////////      about sort      //////////////////
 
-    // if(have_r) change_r(filesname);                     //反向排序
-    // if(have_t) change_t(filesname);                     //时间
+    // if(have_r) change_r(filesname);                     //反向排序///////////////////////////
+    // if(have_t) change_t(filesname);                     //时间//////////////////////////////
 
 
 ///////////////////////      about output    /////////////////
@@ -273,22 +356,31 @@ int main(){
     // if(have_i)         ;               //inode显示
     // if(have_s)          ;              //size显示
     // if(have_l)           ;             //长格式显示
-    // if(have_a)            ;            //显示隐藏文件
+    //if(have_a)            ;            //显示隐藏文件
 
     // if(have_R)             ;           //递归显示
 
 
 ///////////////////////////////////////////////////////////////////打印////////////////////////////////////////////
-    for(int i=0;i<number_files;i++){
-        printf("%s\n",filesname[i]);
-        free(filesname[i]);
-    }
-    free(filesname);
-    closedir(dir);
+    // if(have_ls&&have_a){
+    //     for(int i=0;i<number_files;i++){
+    //         printf("%s\n",filesname[i]);
+    //     }
+    // }else if(have_ls&&!have_a){
+    //     for(int i=0;i<number_files;i++){
+    //         if(filesname[i][0]!='.'){
+    //             printf("%s\n",filesname[i]);
+    //         }
+    //     }
+    // }
+    // for(int i=0;i<number_files;i++){
+    //     free(filesname[i]);
+    // }
+    // free(filesname);
+    // closedir(dir);
     //
-    
 
-    return 0;
+    }
 
 }
 
@@ -337,7 +429,7 @@ void L_NULL_DETCET(void *liu){
 
 // void change_l(filesname);
 
-// void change_a(filesname);
+//void no_change_a(char** filesname,int number_files);
 
 // void change_R(filesname);'
 
@@ -405,3 +497,4 @@ char** get_input_string_segment(char* str){
     return result;
 
 }
+
