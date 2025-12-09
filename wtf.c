@@ -3,6 +3,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<sys/types.h>
+#include<sys/stat.h>
 #include<ctype.h>
 #include<stdbool.h>
 #include<unistd.h>
@@ -14,9 +15,14 @@
 #define COLOR_BGREEN  "\033[1;32m"  // 亮绿色（加粗）
 #define COLOR_RED     "\033[31m"
 #define COLOR_BLUE    "\033[34m"
+struct  all_information{
+    char name[256];
+    int inode;
+    struct stat* stat_info;
+};
 
-
-int compare_string(const void *a,const void *b);    //sort
+int compare_by_name_string(const void*,const void*);    //sort
+int compre_by_time(const void*,const void*);   //sort
 void L_NULL_DETCET(void*);                          //检查NULL
 
 /////////////////////////// about string //////////////////////////////
@@ -27,9 +33,13 @@ char** get_input_string_segment(char*);
 // void change_t(filesname);  
 // void change_i(filesname);
 // void change_s(filesname);
-// void change_l(filesname);
 // void change_a(char**,int);
 // void change_R(filesname);
+int count_dir_entry(DIR*);
+
+void handle(char*,int,int,int,int,int,int,int);
+
+void l_handle(struct all_information**,int);
 
 int main(){
    
@@ -203,12 +213,8 @@ int main(){
 
     }else{
 
-        if(need[0][0]!='l'){
 
             printf("zsh: command not found: %s\n",need[0]);
-            
-
-        }
 
     }
 
@@ -283,22 +289,19 @@ int main(){
     // printf("noooootfound:%d\n",noooooooooooooootfound);
     if(noooooooooooooootfound) return 0;
 
-    int it_have_file_name=0;
-
-    if(!it_have_file_name){
-
-        //使用当前目录
-        DIR* dir;
+    int it_have_file_name=0;                                      
+    //////////////////////////////////////////打开当前目录//////////////////////////////////////////////////////////
+        DIR* dir_current;
         struct dirent *entry;
 
         char **filesname = (char**)malloc(MAX_FILES * sizeof(char*));
         L_NULL_DETCET(filesname);
 
-        dir = opendir("/");
-        L_NULL_DETCET(dir);
+        dir_current = opendir(".");
+        L_NULL_DETCET(dir_current);
 
         int number_files=0;
-        for(;(entry = readdir(dir)) != NULL;){
+        for(;(entry = readdir(dir_current)) != NULL;){
             int len = strlen(entry->d_name)+1;
             filesname[number_files] = (char*)malloc(len * sizeof(char));
             L_NULL_DETCET(filesname[number_files]);
@@ -308,86 +311,91 @@ int main(){
             }
         }
 
-        qsort(filesname,number_files,sizeof(char *),compare_string);
-
-    }
-
-    if(have_l){}
 
     
 ////////////////////////////////////////////////////////////////////////检测文件是否存在//////////////////////////////////////////////////////////
 
 
-    // for(int i=1;i<string_number;i++){
+    int have_file_to_open=0;
 
-    //     if(need[i][0]!='-'){
+    for(int i=1;i<string_number;i++){
 
-    //         /////////////////////////////////////////////////////////////////     here     ////////////////////////////////////////////////////////////////
-    //         for(int j=0;j<number_files;j++){
+        if(need[i][0]!='-'){
 
-    //             if(strcmp(need[i],filesname[j])==0){
-    //                 break;
-    //             }
+            /////////////////////////////////////////////////////////////////     here     ////////////////////////////////////////////////////////////////
+            for(int j=0;j<number_files;j++){
 
-    //             if(j==number_files-1){
+                if(strcmp(need[i],filesname[j])==0){
+                    have_file_to_open=1;
+                    ///////////////////////////////////////////////////////////这里插入对文件的操作/////////////////////////////////////////////////////
 
-    //                 printf("ls: cannot access '%s': No such file or directory\n",need[i]);
-    //                 noooooooooooooootfound=1;
+                    handle(need[i],have_a,have_r,have_t,have_R,have_i,have_s,have_l);
 
-    //             }
+                }
 
-    //         }
+                if(j==number_files-1){
+
+                    printf("ls: cannot access '%s': No such file or directory\n",need[i]);
+                    noooooooooooooootfound=1;
+
+                }
+
+            }
             
 
 
-    //     }
+        }
+    }
 
-////////////////////////////////////////////////////////////////////////使用各参数//////////////////////////////////////////////////////////
+    for(int i=0;i<number_files;i++){
+        free(filesname[i]);
+    }
+    free(filesname);
+    closedir(dir_current);
 
+    if(!have_file_to_open){
 
-///////////////////////      about sort      //////////////////
+        /////////////////////////////////////////////////////////////没有文件名，打开当前目录/////////////////////////////////////////////////////
+        printf("handle current dir:\n");
+        handle(".",have_a,have_r,have_t,have_R,have_i,have_s,have_l);
 
-    // if(have_r) change_r(filesname);                     //反向排序///////////////////////////
-    // if(have_t) change_t(filesname);                     //时间//////////////////////////////
-
-
-///////////////////////      about output    /////////////////
-
-    // if(have_i)         ;               //inode显示
-    // if(have_s)          ;              //size显示
-    // if(have_l)           ;             //长格式显示
-    //if(have_a)            ;            //显示隐藏文件
-
-    // if(have_R)             ;           //递归显示
-
+    }
 
 ///////////////////////////////////////////////////////////////////打印////////////////////////////////////////////
     // if(have_ls&&have_a){
     //     for(int i=0;i<number_files;i++){
     //         printf("%s\n",filesname[i]);
     //     }
+    //     printf("tttttttttttttttttttttttttttttttttttttttttttttttttttt\n");
     // }else if(have_ls&&!have_a){
     //     for(int i=0;i<number_files;i++){
     //         if(filesname[i][0]!='.'){
     //             printf("%s\n",filesname[i]);
     //         }
     //     }
+    //     printf("ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\n");
     // }
     // for(int i=0;i<number_files;i++){
-    //     free(filesname[i]);
+    //     free(filesname[i]);printf("tttttttttttttttttttttttttttttttttttttttttttttttttttt\n");
     // }
     // free(filesname);
-    // closedir(dir);
-    //
+    // closedir(dir_current);
+    
 
-    }
 
+
+
+
+
+
+    
+}
+    return 0;
 }
 
 
-int compare_string(const void *a,const void *b){
 
-    return (strcmp(*(char**)a,*(char**)b));
+int compare_string(const void *a,const void *b){
 
 }
 
@@ -456,6 +464,8 @@ int get_input_string_number(char *str){
 
 }
 
+
+
 char** get_input_string_segment(char* str){
     
     if (str == NULL) return NULL;
@@ -498,3 +508,117 @@ char** get_input_string_segment(char* str){
 
 }
 
+
+
+void handle(char* openfile,int have_a,int have_r,int have_t,int have_R,int have_i,int have_s,int have_l){
+
+    DIR* dir;
+    struct dirent *entry;
+
+    dir = opendir(openfile);
+    L_NULL_DETCET(dir);
+
+    int number_files=count_dir_entry(dir);
+
+    struct all_information** alllist = (struct all_information**)malloc(number_files * sizeof(struct all_information*));
+    L_NULL_DETCET(alllist);
+
+    int index=0;
+    for(;(entry = readdir(dir)) != NULL;index++){
+
+        alllist[index] = (struct all_information*)malloc(sizeof(struct all_information));
+        L_NULL_DETCET(alllist[index]);
+
+        int len = strlen(entry->d_name)+1;
+        memmove(alllist[index]->name,entry->d_name,len);
+        alllist[index]->inode = entry->d_ino;
+
+        struct stat* stat_info = (struct stat*)malloc(sizeof(struct stat));
+        L_NULL_DETCET(stat_info);
+
+        char filepath[512];
+        snprintf(filepath, sizeof(filepath), "%s/%s", openfile, entry->d_name);
+
+        if(stat(filepath,stat_info)==-1){
+            perror("stat error");qsort(alllist,number_files,sizeof(struct all_information*),compare_string);
+            exit(EXIT_FAILURE);
+        }
+
+        alllist[index]->stat_info = stat_info;
+    }
+    closedir(dir);
+
+    /////////////////////////////////////////////paixu///////////////////////////////////////////////
+    if(have_t){
+        qsort(alllist,number_files,sizeof(struct all_information*),compre_by_time);
+    }else{
+        qsort(alllist,number_files,sizeof(struct all_information*),compare_by_name_string);
+    }
+    if(have_r){
+        for(int i=0;i<number_files/2;i++){
+            struct all_information* temp = alllist[i];
+            alllist[i] = alllist[number_files - 1 - i];
+            alllist[number_files - 1 - i] = temp;
+        }
+    }
+    /////////////////////////////////////////////打印///////////////////////////////////////////////
+    for(int i=0;i<number_files;i++){
+        if(!have_a){
+            if(alllist[i]->name[0]!='.'){
+                if(have_i){
+                    printf("%d ",alllist[i]->inode);
+                }
+                if(have_s){
+                    printf("%lu ",alllist[i]->stat_info->st_blocks/2);
+                }
+                if(have_l) l_handle(alllist,number_files);
+                printf("%s\n",alllist[i]->name);
+            }
+        }else{
+            if(have_i){
+                printf("%d ",alllist[i]->inode);
+            }
+            if(have_s){
+                printf("%lu ",alllist[i]->stat_info->st_blocks/2);
+            }
+            if(have_l) l_handle(alllist,number_files);
+            printf("%s\n",alllist[i]->name);
+        }
+    }
+}
+
+void l_handle(struct all_information** alllist,int number_files){
+    printf("l_handle ");
+};
+
+int count_dir_entry(DIR* dir){
+
+    int count=0;
+    struct dirent *entry;
+
+    rewinddir(dir);
+
+    while((entry = readdir(dir)) != NULL){
+        count++;
+    }
+
+    rewinddir(dir);
+
+    return count;
+}
+
+int compare_by_name_string(const void *a,const void *b){
+    const struct all_information* info1 = *(const struct all_information**)a;
+    const struct all_information* info2 = *(const struct all_information**)b;
+
+    return strcmp(info1->name, info2->name);
+}
+
+int compre_by_time(const void *a,const void *b){
+    const struct all_information* info1 = *(const struct all_information**)a;
+    const struct all_information* info2 = *(const struct all_information**)b;
+
+    if(info1->stat_info->st_mtime < info2->stat_info->st_mtime) return 1;
+    else if(info1->stat_info->st_mtime > info2->stat_info->st_mtime) return -1;
+    else return 0;
+}
