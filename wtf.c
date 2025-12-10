@@ -29,15 +29,15 @@ void L_NULL_DETCET(void*);                          //检查NULL
 int get_input_string_number(char*);
 char** get_input_string_segment(char*);
 ////////////////////////////////////////////  about parameter //////////
-// void change_r(filesname);                       
-// void change_t(filesname);  
-// void change_i(filesname);
-// void change_s(filesname);
-// void change_a(char**,int);
+// void change_r(filesname);////////////////////////////////////////////////////////////////////////////////////////////                       
+// void change_t(filesname);/////////////////////////////////////////////////////////////////////////////////////////////////  
+// void change_i(filesname);/////////////////////////////////////////////////////////////////////////////////////////////
+// void change_s(filesname);////////////////////////////////////////////////////////////////////////////////////////////////
+// void change_a(char**,int);/////////////////////////////////////////////////////////////////////////////////////////
 // void change_R(filesname);
 int count_dir_entry(DIR*);
 
-void handle(char*,int,int,int,int,int,int,int);
+int handle(char*,int,int,int,int,int,int,int);
 
 void l_handle(struct all_information**,int);
 
@@ -220,9 +220,8 @@ int main(){
 
     if(!have_ls) continue;
 
-    int noooooooooooooootfound=0;
 
-
+    int argument_not_found=0;
     for(int i=1;i<string_number;i++){
 
         // if(need[i][0]!='-'){
@@ -246,6 +245,33 @@ int main(){
 
 
         // }else
+        if(!(strcmp(need[i],"--help"))){
+            
+            printf("List directory contents.\n");
+            printf("Ignore files and directories starting with a '.' by default\n");
+            printf("\n");
+            printf("Usage: ls [OPTION]... [FILE]...\n");
+            printf("\n");
+            printf("Arguments:\n");
+            printf("  [paths]...\n");
+            printf("\n");
+            printf("Options:\n");
+            printf("  --help                                     oh I get a little help from my friends\n");
+            printf("  -a                                         applepen pinepple pen ppap .\n");
+            printf("  -i                                         i want to break free\n");
+            printf("  -l                                         lovelive good good\n");
+            printf("  -R                                         RNB's king David Tao\n");
+            printf("  -r                                         rip Kobe Bryant\n");
+            printf("  -s                                         sb code sb life sb me sb everyone\n");
+            printf("  -t                                         time and tide wait for no man\n");
+            printf("\n");
+            printf("The TIME_STYLE argument can be full-iso, long-iso, iso, locale or +FORMAT. FORMAT is interpreted like in date. Also the TIME_STYLE environment variable sets the default style to use.");
+            printf("Let me take you down Cause I'm going to strawberry fields Nothing is real And nothing to hung about Strawberry fields forever Strawberry fields forever Strawberry fields forever.");
+            printf("\n");
+            argument_not_found=1;
+            break;
+        }
+
         if(need[i][0]=='-'){
             
             for(int j=1;need[i][j]!='\0';j++){
@@ -266,6 +292,7 @@ int main(){
                     printf("Usage: ls [OPTION]... [FILE]...\n");
                     printf("\n");
                     printf("For more information, try '--help'.\n");
+                    argument_not_found=1;
                     break;
                     //这个地方因为任务没有作要求，因此就简单处理了
                 }
@@ -276,6 +303,7 @@ int main(){
 
     }
     
+    if(argument_not_found) continue;
     //测试是否正确获得参数
     // printf("have_ls:%d\n",have_ls);
     // printf("have_a:%d\n",have_a);
@@ -287,7 +315,7 @@ int main(){
     // printf("have_s:%d\n",have_s);
 ///////////////////////////////////////////////////////////////////error/////////////////////////////////////////////////
     // printf("noooootfound:%d\n",noooooooooooooootfound);
-    if(noooooooooooooootfound) return 0;
+    
 
     int it_have_file_name=0;                                      
     //////////////////////////////////////////打开当前目录//////////////////////////////////////////////////////////
@@ -325,26 +353,19 @@ int main(){
             /////////////////////////////////////////////////////////////////     here     ////////////////////////////////////////////////////////////////
             for(int j=0;j<number_files;j++){
 
-                if(strcmp(need[i],filesname[j])==0){
-                    have_file_to_open=1;
-                    ///////////////////////////////////////////////////////////这里插入对文件的操作/////////////////////////////////////////////////////
-
-                    handle(need[i],have_a,have_r,have_t,have_R,have_i,have_s,have_l);
-
-                }
-
-                if(j==number_files-1){
-
+                int judge_have_file = handle(need[i],have_a,have_r,have_t,have_R,have_i,have_s,have_l);
+                if(judge_have_file==-1 && j==number_files-1){
                     printf("ls: cannot access '%s': No such file or directory\n",need[i]);
-                    noooooooooooooootfound=1;
-
                 }
-
+                if(judge_have_file != -1){
+                    have_file_to_open=1;
+                }
+                break;
             }
-            
-
 
         }
+
+
     }
 
     for(int i=0;i<number_files;i++){
@@ -378,6 +399,8 @@ int main(){
     // for(int i=0;i<number_files;i++){
     //     free(filesname[i]);printf("tttttttttttttttttttttttttttttttttttttttttttttttttttt\n");
     // }
+// void change_R(filesname);'
+
     // free(filesname);
     // closedir(dir_current);
     
@@ -394,10 +417,6 @@ int main(){
 }
 
 
-
-int compare_string(const void *a,const void *b){
-
-}
 
 void L_NULL_DETCET(void *liu){
 
@@ -509,14 +528,17 @@ char** get_input_string_segment(char* str){
 }
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////handle函数///////////////////////////////////////////////////////////
+int handle(char* openfile,int have_a,int have_r,int have_t,int have_R,int have_i,int have_s,int have_l){
 
-void handle(char* openfile,int have_a,int have_r,int have_t,int have_R,int have_i,int have_s,int have_l){
-
+    //printf("1145141919810 handle:%s\n",openfile);
     DIR* dir;
     struct dirent *entry;
 
     dir = opendir(openfile);
-    L_NULL_DETCET(dir);
+    if(dir==NULL){
+        return -1;
+    }
 
     int number_files=count_dir_entry(dir);
 
@@ -540,7 +562,7 @@ void handle(char* openfile,int have_a,int have_r,int have_t,int have_R,int have_
         snprintf(filepath, sizeof(filepath), "%s/%s", openfile, entry->d_name);
 
         if(stat(filepath,stat_info)==-1){
-            perror("stat error");qsort(alllist,number_files,sizeof(struct all_information*),compare_string);
+            perror("stat error");
             exit(EXIT_FAILURE);
         }
 
@@ -563,6 +585,7 @@ void handle(char* openfile,int have_a,int have_r,int have_t,int have_R,int have_
     }
     /////////////////////////////////////////////打印///////////////////////////////////////////////
     for(int i=0;i<number_files;i++){
+    
         if(!have_a){
             if(alllist[i]->name[0]!='.'){
                 if(have_i){
@@ -571,8 +594,11 @@ void handle(char* openfile,int have_a,int have_r,int have_t,int have_R,int have_
                 if(have_s){
                     printf("%lu ",alllist[i]->stat_info->st_blocks/2);
                 }
-                if(have_l) l_handle(alllist,number_files);
-                printf("%s\n",alllist[i]->name);
+                if(have_l) l_handle(alllist,i);
+                printf("%s ",alllist[i]->name);
+                if(have_l){
+                    printf("\n");
+                }
             }
         }else{
             if(have_i){
@@ -581,15 +607,45 @@ void handle(char* openfile,int have_a,int have_r,int have_t,int have_R,int have_
             if(have_s){
                 printf("%lu ",alllist[i]->stat_info->st_blocks/2);
             }
-            if(have_l) l_handle(alllist,number_files);
-            printf("%s\n",alllist[i]->name);
+            if(have_l) l_handle(alllist,i);
+            printf("%s ",alllist[i]->name);
+            if(have_l){
+                printf("\n");
+            }
+        }
+    
+        if(!have_l){
+            /////////////////////////////////////////////////
+            if(i==number_files-1){
+                printf("\n");
+            }
         }
     }
+
+    if(have_R){
+        for(int i=0;i<number_files;i++){
+            if(strcmp(alllist[i]->name,".")!=0 && strcmp(alllist[i]->name,"..")!=0 && (have_a || alllist[i]->name[0]!='.')){
+                if(S_ISDIR(alllist[i]->stat_info->st_mode)){
+                    printf("\n%s:\n",alllist[i]->name);
+                    handle(alllist[i]->name,have_a,have_r,have_t,have_R,have_i,have_s,have_l);
+                }
+            }
+        }
+    }
+    return 0;
 }
 
-void l_handle(struct all_information** alllist,int number_files){
+
+
+
+
+void l_handle(struct all_information** alllist,int index){
     printf("l_handle ");
 };
+
+
+
+
 
 int count_dir_entry(DIR* dir){
 
@@ -604,10 +660,30 @@ int count_dir_entry(DIR* dir){
 
     rewinddir(dir);
 
+    
     return count;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int compare_by_name_string(const void *a,const void *b){
+    
     const struct all_information* info1 = *(const struct all_information**)a;
     const struct all_information* info2 = *(const struct all_information**)b;
 
@@ -615,6 +691,7 @@ int compare_by_name_string(const void *a,const void *b){
 }
 
 int compre_by_time(const void *a,const void *b){
+
     const struct all_information* info1 = *(const struct all_information**)a;
     const struct all_information* info2 = *(const struct all_information**)b;
 
